@@ -36,6 +36,4 @@ yarn-error.log*
 next-env.d.ts
 */target
 
-server-nav-back/static/*
-
-!server-nav-back/static/.gitkeep 
+*/static/
