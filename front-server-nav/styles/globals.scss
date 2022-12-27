@@ -1,0 +1,32 @@
+html,
+body {
+    padding: 0;
+    margin: 0;
+    font-family: -apple-system, sans-serif;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+* {
+    box-sizing: border-box;
+}
+@media (prefers-color-scheme: dark) {
+    html {
+        color-scheme: dark;
+    }
+    body {
+        color: #efefef;
+        background: #131313;
+    }
+}
+
+@media print {
+    html,
+    body,
+    * {
+        filter: blur(100px) !important;
+    }
+}
