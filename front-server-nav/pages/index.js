@@ -7,13 +7,16 @@ import U2fForm from '../components/U2fForm';
 import { getCookie } from '../utils/cookies';
 import axios from 'axios';
 import { NotificationManager } from 'react-notifications';
+import Navbar from '../components/Navbar';
+import FloatingWindow from '../components/FloatingWindow';
+
 export default function Home() {
 
     const [CurrentChallenge, setCurrentChallenge] = useState(0);
 
     const [Token, setToken] = useState("");
 
-    const [LoggedIn, setLoggedIn] = useState(false);
+    const [LoggedIn, setLoggedIn] = useState(true);
 
     const [User, setUser] = useState({});
 
@@ -53,6 +56,7 @@ export default function Home() {
                             <U2fForm key={2} setLoggedIn={setLoggedIn} setToken={setToken} Token={Token} updateUserData={updateUserData} />
                         ][CurrentChallenge]
                     }).call(this) : <>
+                        <Navbar />
                         <img className={styles.logo} src="/logo.png"></img>
                     </>
                 }

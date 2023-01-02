@@ -1,0 +1,36 @@
+.navbar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 300px;
+    background: #222;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+
+    .time {
+
+        color: #fff;
+        font-size: 22px;
+        text-align: center;
+    }
+
+    .item {
+        color: #fff;
+        margin: 0;
+        padding: 15px 20px;
+        width: 100%;
+        text-align: center;
+
+        cursor: pointer;
+
+        transition: 0.2s background;
+
+        &:hover {
+
+            transition: 0.2s background;
+            background: lighten(#222, 10);
+        }
+    }
+}

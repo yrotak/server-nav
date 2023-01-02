@@ -1,0 +1,63 @@
+.window {
+    position: relative;
+
+    border: 2px solid #222;
+
+    display: flex;
+    flex-direction: column;
+    border-radius: 8px;
+    overflow: hidden;
+    z-index: 999;
+
+    .header {
+        flex: 1;
+        background: #222;
+        width: 100%;
+
+        display: flex;
+        justify-content: space-between;
+        box-sizing: border-box;
+        align-items: center;
+
+        padding: 2px 20px;
+
+        user-select: none;
+
+        .title {
+            width: calc(100% - 35px);
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+            font-weight: 500;
+            color: #fff;
+        }
+
+        .close {
+            width: 35px;
+            height: 35px;
+            background: transparent;
+            border: 0;
+            font-size: 22px;
+            cursor: pointer;
+            color: #fff;
+
+            transition: 0.2s background;
+
+            &:hover {
+
+                transition: 0.2s background;
+                background: darken(#222, 10);
+            }
+        }
+    }
+
+    .content {
+        flex: 6;
+        background: #fff;
+        width: 100%;
+        padding: 5px 15px;
+        box-sizing: border-box;
+        overflow: auto;
+        height: 100%;
+    }
+}
