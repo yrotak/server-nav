@@ -11,6 +11,8 @@ const U2fForm = ({ setLoggedIn, setToken, Token, updateUserData }) => {
     const [signRequest, setsignRequest] = useState({});
     const [challenge_str, setchallenge_str] = useState("");
 
+    const [error, seterror] = useState("");
+
     useEffect(() => {
         u2fApi.isSupported().then((supported) => {
             setUnsupported(!supported)
@@ -30,8 +32,9 @@ const U2fForm = ({ setLoggedIn, setToken, Token, updateUserData }) => {
         return <p>U2F is not supported on this browser.</p>;
     return <form className={styles.form} onSubmit={(e) => {
         e.preventDefault()
-        console.log(signRequest, signRequest.registeredKeys);
+        seterror("")
         window.u2f.sign(signRequest.appId, signRequest.challenge, signRequest.registeredKeys, (resp) => {
+            console.log(resp);
             if(resp.errorCode == 0) {
                 axios.post(`${window.location.origin}/api/v1/Users/signResponse`, {
                     challenge_str: challenge_str,
@@ -45,14 +48,20 @@ const U2fForm = ({ setLoggedIn, setToken, Token, updateUserData }) => {
                     setCookie("token", res.data.token, 2)
                     setLoggedIn(true)
                     updateUserData()
+                }).catch(e => {
+                    if(e.response.data)
+                        seterror(e.response.data.error)
                 })
+            } else if(resp.errorCode == 4) {
+                seterror("Invalid U2F key")
             }
         })
     }}>
-        <p>Please use your U2F key to continue</p>
+        <p>Insert and Tap your U2F security key</p>
         <button className={styles.button}>
             Authentify
         </button>
+        <p className={styles.error}>{error}</p>
     </form>;
 };
 

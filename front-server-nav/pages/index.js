@@ -16,7 +16,7 @@ export default function Home() {
 
     const [Token, setToken] = useState("");
 
-    const [LoggedIn, setLoggedIn] = useState(true);
+    const [LoggedIn, setLoggedIn] = useState(false);
 
     const [User, setUser] = useState({});
 
@@ -30,6 +30,7 @@ export default function Home() {
             }).then(res => {
                 setToken(cook)
                 setUser(res.data)
+                console.log(res.data);
                 setLoggedIn(true)
                 NotificationManager.success('Welcome back captain !', 'Logged In !');
             })
@@ -39,7 +40,6 @@ export default function Home() {
     useEffect(() => {
         updateUserData()
     }, []);
-
     return (
         <div className={styles.container}>
             <Head>
@@ -56,7 +56,7 @@ export default function Home() {
                             <U2fForm key={2} setLoggedIn={setLoggedIn} setToken={setToken} Token={Token} updateUserData={updateUserData} />
                         ][CurrentChallenge]
                     }).call(this) : <>
-                        <Navbar />
+                        <Navbar User={User} Token={Token} />
                         <img className={styles.logo} src="/logo.png"></img>
                     </>
                 }

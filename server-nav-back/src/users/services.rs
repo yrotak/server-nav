@@ -1,8 +1,9 @@
-use crate::users::models::{RegistrationFromDb, SignData};
-
-use super::models::{
-    AppState, CreateEntryData, LoginData, RegisterTokenData, TotpData, User, UserTokenData,
+use crate::{
+    users::models::{RegistrationFromDb, SignData},
+    utils::utils::AppState,
 };
+
+use super::models::{CreateEntryData, LoginData, RegisterTokenData, TotpData, User, UserTokenData};
 use actix_web::{
     delete, get, post, put,
     web::{Data, Json, Path, ServiceConfig},
@@ -13,40 +14,72 @@ use rand::distributions::{Alphanumeric, DistString};
 use sqlx;
 use u2f::{messages::SignResponse, protocol::Challenge, register::Registration};
 
-fn build_error(err: &str) -> serde_json::Value {
-    return serde_json::json!({
-        "error": err
-    })
-}
-
+use crate::utils::utils;
 
 #[get("/api/v1/Users")]
-async fn get_entries(state: Data<AppState>) -> impl Responder {
-    match sqlx::query_as!(User, "SELECT * FROM server_nav.users")
-        .fetch_all(&state.db)
-        .await
+async fn get_entries(state: Data<AppState>, req: HttpRequest) -> impl Responder {
+    match utils::check_token(
+        req.headers()
+            .get("Authorization")
+            .unwrap()
+            .to_str()
+            .unwrap_or("no")
+            .to_string(),
+        state.clone(),
+    )
+    .await
     {
-        Ok(users) => HttpResponse::Ok().json(users),
-        Err(_) => HttpResponse::NotFound().json(build_error("Something happened while contacting db")),
+        Ok(user) => {
+            if(user.rank != "admin") {
+                return HttpResponse::Unauthorized().json(utils::build_error("You need admin rank"));
+            }
+            match sqlx::query_as!(User, "SELECT * FROM server_nav.users")
+                .fetch_all(&state.db)
+                .await
+            {
+                Ok(users) => HttpResponse::Ok().json(users),
+                Err(_) => HttpResponse::NotFound()
+                    .json(utils::build_error("Something happened while contacting db")),
+            }
+        }
+        Err(e) => HttpResponse::Unauthorized().json(utils::build_error(&e)),
     }
 }
 #[get("/api/v1/Users/generateLink")]
-async fn generate_link(state: Data<AppState>) -> impl Responder {
-    let regpayload = jsonwebtoken::encode(
-        &jsonwebtoken::Header::default(),
-        &RegisterTokenData {
-            regsess: Alphanumeric.sample_string(&mut rand::thread_rng(), 16),
-            exp: chrono::offset::Local::now().timestamp() + (2 * 24 * 60 * 60 * 1000),
-        },
-        &jsonwebtoken::EncodingKey::from_secret(
-            std::env::var("JWT_SECRET")
-                .expect("secret not found")
-                .as_ref(),
-        ),
+async fn generate_link(state: Data<AppState>, req: HttpRequest) -> impl Responder {
+    match utils::check_token(
+        req.headers()
+            .get("Authorization")
+            .unwrap()
+            .to_str()
+            .unwrap_or("no")
+            .to_string(),
+        state,
     )
-    .unwrap();
-    return HttpResponse::Ok()
-        .json(serde_json::json!({"url":std::env::var("URL").expect("url not found") + "/register?p=" + regpayload.as_str()}));
+    .await
+    {
+        Ok(user) => {
+            if(user.rank != "admin") {
+                return HttpResponse::Unauthorized().json(utils::build_error("You need admin rank"));
+            }
+            let regpayload = jsonwebtoken::encode(
+                &jsonwebtoken::Header::default(),
+                &RegisterTokenData {
+                    regsess: Alphanumeric.sample_string(&mut rand::thread_rng(), 16),
+                    exp: chrono::offset::Local::now().timestamp() + (2 * 24 * 60 * 60 * 1000),
+                },
+                &jsonwebtoken::EncodingKey::from_secret(
+                    std::env::var("JWT_SECRET")
+                        .expect("secret not found")
+                        .as_ref(),
+                ),
+            )
+            .unwrap();
+            return HttpResponse::Ok()
+                .json(serde_json::json!({"url":std::env::var("URL").expect("url not found") + "/register?p=" + regpayload.as_str()}));
+        }
+        Err(e) => HttpResponse::Unauthorized().json(utils::build_error(&e)),
+    }
 }
 
 #[post("/api/v1/Users/login")]
@@ -62,7 +95,14 @@ async fn login(state: Data<AppState>, data: Json<LoginData>) -> impl Responder {
     {
         Ok(user) => {
             if user.len() == 0 {
-                return HttpResponse::NotFound().json(build_error("User does not exist or wrong creditentials"));
+                return HttpResponse::NotFound().json(utils::build_error(
+                    "User does not exist or wrong creditentials",
+                ));
+            }
+            if user[0].rank == "unaccepted" {
+                return HttpResponse::NotFound().json(utils::build_error(
+                    "Your account has not been activated",
+                ));
             }
             let token = jsonwebtoken::encode(
                 &jsonwebtoken::Header::default(),
@@ -81,7 +121,8 @@ async fn login(state: Data<AppState>, data: Json<LoginData>) -> impl Responder {
             .unwrap();
             return HttpResponse::Ok().json(serde_json::json!({ "token": token }));
         }
-        Err(_) => HttpResponse::NotFound().json(build_error("Something happened while contacting db")),
+        Err(_) => HttpResponse::NotFound()
+            .json(utils::build_error("Something happened while contacting db")),
     }
 }
 
@@ -117,7 +158,7 @@ async fn totp_confirm(
                 Ok(user) => {
                     if user.len() == 0 {
                         return HttpResponse::Unauthorized()
-                            .json(build_error("Token creditentials are invalids"));
+                            .json(utils::build_error("Token creditentials are invalids"));
                     }
                     let totp = totp_rs::TOTP::new(
                         totp_rs::Algorithm::SHA1,
@@ -131,7 +172,8 @@ async fn totp_confirm(
                     .unwrap();
                     let totptoken = totp.generate_current().unwrap();
                     if totptoken != data.code {
-                        return HttpResponse::Unauthorized().json(build_error("TOTP code is invalid"));
+                        return HttpResponse::Unauthorized()
+                            .json(utils::build_error("TOTP code is invalid"));
                     }
                     let token = jsonwebtoken::encode(
                         &jsonwebtoken::Header::default(),
@@ -151,10 +193,13 @@ async fn totp_confirm(
                     .unwrap();
                     return HttpResponse::Ok().json(serde_json::json!({ "token": token }));
                 }
-                Err(_) => return HttpResponse::NotFound().json(build_error("Something happened while contacting db")),
+                Err(_) => {
+                    return HttpResponse::NotFound()
+                        .json(utils::build_error("Something happened while contacting db"))
+                }
             }
         }
-        Err(e) => HttpResponse::Unauthorized().json(build_error("Invalid token")),
+        Err(e) => HttpResponse::Unauthorized().json(utils::build_error("Invalid token")),
     }
 }
 #[post("/api/v1/Users/signRequest")]
@@ -186,7 +231,7 @@ async fn sign_request(state: Data<AppState>, req: HttpRequest) -> impl Responder
                     Ok(user) => {
                         if user.len() == 0 {
                             return HttpResponse::Unauthorized()
-                                .json(build_error("Token creditentials are invalids"));
+                                .json(utils::build_error("Token creditentials are invalids"));
                         }
                         let challenge = state.u2f.generate_challenge().unwrap();
                         let challenge_str = serde_json::to_string(&challenge);
@@ -205,13 +250,16 @@ async fn sign_request(state: Data<AppState>, req: HttpRequest) -> impl Responder
                             "challenge_str": challenge_str.unwrap()
                         }));
                     }
-                    Err(_) => return HttpResponse::NotFound().json(build_error("Something happened while contacting db")),
+                    Err(_) => {
+                        return HttpResponse::NotFound()
+                            .json(utils::build_error("Something happened while contacting db"))
+                    }
                 }
             } else {
-                return HttpResponse::Unauthorized().json(build_error("Wrong auth level"));
+                return HttpResponse::Unauthorized().json(utils::build_error("Wrong auth level"));
             }
         }
-        Err(e) => HttpResponse::Unauthorized().json(build_error("Invalid token")),
+        Err(e) => HttpResponse::Unauthorized().json(utils::build_error("Invalid token")),
     }
 }
 #[post("/api/v1/Users/signResponse")]
@@ -247,7 +295,7 @@ async fn sign_response(
                     Ok(user) => {
                         if user.len() == 0 {
                             return HttpResponse::Unauthorized()
-                                .json(build_error("Token creditentials are invalids"));
+                                .json(utils::build_error("Token creditentials are invalids"));
                         }
                         let challenge: Challenge =
                             serde_json::from_str(&data.challenge_str).unwrap();
@@ -293,17 +341,21 @@ async fn sign_response(
                                 }));
                             }
                             Err(_e) => {
-                                return HttpResponse::Unauthorized().json(build_error("Invalid U2F !"));
+                                return HttpResponse::Unauthorized()
+                                    .json(utils::build_error("Invalid U2F !"));
                             }
                         }
                     }
-                    Err(_) => return HttpResponse::NotFound().json(build_error("Something happened while contacting db")),
+                    Err(_) => {
+                        return HttpResponse::NotFound()
+                            .json(utils::build_error("Something happened while contacting db"))
+                    }
                 }
             } else {
-                return HttpResponse::Unauthorized().json(build_error("Wrong auth level"));
+                return HttpResponse::Unauthorized().json(utils::build_error("Wrong auth level"));
             }
         }
-        Err(e) => HttpResponse::Unauthorized().json(build_error("Invalid token")),
+        Err(e) => HttpResponse::Unauthorized().json(utils::build_error("Invalid token")),
     }
 }
 #[get("/api/v1/Users/initRegister")]
@@ -344,7 +396,7 @@ async fn post_entries(state: Data<AppState>, data: Json<CreateEntryData>) -> imp
     {
         Ok(user) => {
             if user.len() > 0 {
-                return HttpResponse::NotAcceptable().json(build_error("Link already used"));
+                return HttpResponse::NotAcceptable().json(utils::build_error("Link already used"));
             }
             let challenge: Challenge = serde_json::from_str(&data.challenge_str).unwrap();
             let registration = state
@@ -354,89 +406,85 @@ async fn post_entries(state: Data<AppState>, data: Json<CreateEntryData>) -> imp
                 Ok(reg) => {
                     match sqlx::query_as!(
                         User,
-                        "INSERT INTO server_nav.users (username, password, totp, date, regsess, u2f_device) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, username, password, totp, date, regsess, u2f_device",
+                        "INSERT INTO server_nav.users (username, password, totp, date, regsess, u2f_device, rank) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, username, password, totp, date, regsess, u2f_device, rank",
                         data.username,
                         sha256::digest(String::from(data.password.clone())),
                         data.totp,
                         chrono::offset::Local::now().timestamp(),
                         regpayload.regsess,
-                        serde_json::to_string(&reg).unwrap()
+                        serde_json::to_string(&reg).unwrap(),
+                        "unaccepted"
                     )
                     .fetch_all(&state.db)
                     .await
                     {
                         Ok(user) => return HttpResponse::Ok().json(user),
-                        Err(_) => return HttpResponse::NotFound().json(build_error("Something happened while contacting db")),
+                        Err(_) => return HttpResponse::NotFound().json(utils::build_error("Something happened while contacting db")),
                     }
                 }
                 Err(e) => {
-                    return HttpResponse::NotFound().json(build_error("Something happened while contacting db"));
+                    return HttpResponse::NotFound().json(utils::build_error("Something happened while contacting db"));
                 }
             }
         }
-        Err(_) => HttpResponse::NotFound().json(build_error("Something happened while contacting db")),
+        Err(_) => HttpResponse::NotFound()
+            .json(utils::build_error("Something happened while contacting db")),
     }
 }
 
 #[delete("/api/v1/Users/{id}")]
-async fn delete_entries(state: Data<AppState>, path_id: Path<i32>) -> impl Responder {
-    let id = path_id.into_inner();
-
-    match sqlx::query_as!(
-        User,
-        "DELETE FROM server_nav.users WHERE id = $1 RETURNING id, username, password, totp, date, regsess, u2f_device",
-        id
-    )
-    .fetch_all(&state.db)
-    .await
-    {
-        Ok(user) => HttpResponse::Ok().json(user),
-        Err(_) => HttpResponse::NotFound().json(build_error("Something happened while contacting db")),
-    }
-}
-#[post("/api/v1/Users/checkToken")]
-async fn check_token(
+async fn delete_entries(
     state: Data<AppState>,
+    path_id: Path<i32>,
     req: HttpRequest,
 ) -> impl Responder {
-    match jsonwebtoken::decode::<UserTokenData>(
-        &req.headers()
+    match utils::check_token(
+        req.headers()
             .get("Authorization")
             .unwrap()
             .to_str()
-            .unwrap_or("no"),
-        &jsonwebtoken::DecodingKey::from_secret(
-            std::env::var("JWT_SECRET")
-                .expect("secret not found")
-                .as_ref(),
-        ),
-        &jsonwebtoken::Validation::default(),
-    ) {
-        Ok(token) => {
-            if token.claims.auth_level == 3 {
-                match sqlx::query_as!(
-                    User,
-                    "SELECT * FROM server_nav.users WHERE id = $1 AND password = $2",
-                    token.claims.id,
-                    token.claims.password
-                )
-                .fetch_all(&state.db)
-                .await
-                {
-                    Ok(user) => {
-                        if user.len() == 0 {
-                            return HttpResponse::Unauthorized()
-                                .json(build_error("Token creditentials are invalids"));
-                        }
-                        return HttpResponse::Ok().json(user[0].clone());
-                    }
-                    Err(_) => return HttpResponse::NotFound().json(build_error("Something happened while contacting db")),
-                }
-            } else {
-                return HttpResponse::Unauthorized().json(build_error("Wrong auth level"));
+            .unwrap_or("no")
+            .to_string(),
+        state.clone(),
+    )
+    .await
+    {
+        Ok(user) => {
+            if(user.rank != "admin") {
+                return HttpResponse::Unauthorized().json(utils::build_error("You need admin rank"));
+            }
+            let id = path_id.into_inner();
+
+            match sqlx::query_as!(
+                User,
+                "DELETE FROM server_nav.users WHERE id = $1 RETURNING id, username, password, totp, date, regsess, u2f_device, rank",
+                id
+            )
+            .fetch_all(&state.db)
+            .await
+            {
+                Ok(user) => HttpResponse::Ok().json(user),
+                Err(_) => HttpResponse::NotFound().json(utils::build_error("Something happened while contacting db")),
             }
         }
-        Err(e) => HttpResponse::Unauthorized().json(build_error("Invalid token")),
+        Err(e) => HttpResponse::Unauthorized().json(utils::build_error(&e)),
+    }
+}
+#[post("/api/v1/Users/checkToken")]
+async fn check_token(state: Data<AppState>, req: HttpRequest) -> impl Responder {
+    match utils::check_token(
+        req.headers()
+            .get("Authorization")
+            .unwrap()
+            .to_str()
+            .unwrap_or("no")
+            .to_string(),
+        state,
+    )
+    .await
+    {
+        Ok(user) => HttpResponse::Ok().json(user),
+        Err(e) => HttpResponse::Unauthorized().json(utils::build_error(&e)),
     }
 }
 pub fn config(cfg: &mut ServiceConfig) {

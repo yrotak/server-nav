@@ -2,11 +2,6 @@ use serde::{Deserialize, Serialize};
 use sqlx::{Pool, Postgres, FromRow};
 use u2f::protocol::U2f;
 
-pub struct AppState {
-    pub db: Pool<Postgres>,
-    pub u2f: U2f
-}
-
 #[derive(Debug, Clone, Serialize, FromRow)]
 pub struct User {
     pub id: i32,
@@ -15,7 +10,8 @@ pub struct User {
     pub totp: String,
     pub date: i64,
     pub regsess: String,
-    pub u2f_device: String
+    pub u2f_device: String,
+    pub rank: String
 }
 
 #[derive(Clone, Deserialize)]

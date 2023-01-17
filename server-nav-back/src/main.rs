@@ -1,5 +1,13 @@
 use std::io::Error;
 
+
+mod users;
+mod navigation;
+mod passwords;
+mod totps;
+
+mod utils;
+
 use actix_files::NamedFile;
 use actix_web::{get, post, web, web::Data, App, HttpResponse, HttpServer, Responder};
 use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
@@ -7,8 +15,7 @@ use sqlx::postgres::PgPoolOptions;
 use u2f::messages::*;
 use u2f::protocol::*;
 use u2f::register::*;
-mod users;
-use users::models::AppState;
+use utils::utils::AppState;
 
 #[get("/")]
 async fn index() -> Result<NamedFile, Error> {
@@ -38,6 +45,9 @@ async fn main() -> std::io::Result<()> {
                 db: pool.clone(),
                 u2f: U2f::new(std::env::var("URL").expect("url not found")),
             }))
+            .configure(navigation::services::config)
+            .configure(totps::services::config)
+            .configure(passwords::services::config)
             .configure(users::services::config)
             .service(index)
             .service(actix_files::Files::new("/", "./static").show_files_listing())

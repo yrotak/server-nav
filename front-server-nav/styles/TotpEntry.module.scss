@@ -1,0 +1,65 @@
+.totpentry {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    padding: 10px 0;
+
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        .texts {
+            display: flex;
+            flex-direction: column;
+            .title {
+                font-size: 14px;
+            }
+            .code {
+                font-size: 28px;
+            }
+        }
+        .btns {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            .copy,
+            .delete {
+                width: 32px;
+                cursor: pointer;
+                background: transparent;
+                border: 0;
+                &:focus {
+                    outline: 0;
+                }
+            }
+        }
+    }
+
+    .progressbar {
+        position: relative;
+        width: 100%;
+        height: 5px;
+        background: #ccc;
+        border-radius: 4px;
+        overflow: hidden;
+        .progress {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: rgb(0, 149, 232);
+            transition: 0.2s;
+            transition-property: width, background;
+        }
+    }
+    &.almost {
+        .header .texts .code {
+            color: #eb2f06;
+        }
+        .progressbar .progress {
+            background: #eb2f06;
+        }
+    }
+}

@@ -2,28 +2,19 @@ import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import styles from '../styles/Navbar.module.scss'
 import FloatingWindow from './FloatingWindow';
-import dynamic from 'next/dynamic'
 import Vault from './Vault';
+import FeatherIcon from 'feather-icons-react';
+import TotpApp from './TotpApp';
+import UserInfos from './UserInfos';
+import Navigation from './Navigation';
 
-const TerminalDynamic = dynamic(() => import('./TerminalImpl'), {
-  ssr: false,
-})
-
-const Navbar = ({ }) => {
+const Navbar = ({ User, Token }) => {
 
     const [selectedIds, setSelectedIds] = useState([]);
 
-    function getCurrentHourIn24Format() {
-        const currentTime = new Date();
-        const hours = currentTime.getHours();
-        const hoursString = hours < 10 ? `0${hours}` : `${hours}`;
-        const timeString = `${hoursString}:${currentTime.toLocaleTimeString().slice(2).slice(0, -3)}`;
-        return timeString
-    }
+    const [focusid, setfocusid] = useState(0);
 
-    const [hour, sethour] = useState("")
-
-    const handleClick = (event, index) => {
+    const select = (index) => {
         if (selectedIds.includes(index)) {
             setSelectedIds(selectedIds.filter((i) => i !== index));
         } else {
@@ -31,24 +22,17 @@ const Navbar = ({ }) => {
         }
     };
 
-    useEffect(() => {
-        sethour(getCurrentHourIn24Format());
-        const interval = setInterval(() => {
-            sethour(getCurrentHourIn24Format());
-        }, 1000);
-
-        return () => clearInterval(interval);
-    }, []);
-
-
     return <>
         <nav className={styles.navbar}>
-            <p className={styles.time}>{new Date().toLocaleDateString()}<br />{hour}</p>
-            <ul className={styles.item} onClick={(event) => handleClick(event, 0)}>Nav</ul>
-            <ul className={styles.item} onClick={(event) => handleClick(event, 1)}>Vault</ul>
-            <ul className={styles.item} onClick={(event) => handleClick(event, 2)}>SSH</ul>
-            <ul className={styles.item} onClick={(event) => handleClick(event, 3)}>Your account</ul>
-            <ul className={styles.item} onClick={(event) => handleClick(event, 4)}>Admin</ul>
+            <div className={styles.watermark}>
+                <img src="/logo.png" className={styles.img}></img>
+                <h2 className={styles.title}>Drayneur</h2>
+            </div>
+            <ul className={styles.item} onClick={() => select(0)}><FeatherIcon icon="navigation" /> Nav</ul>
+            <ul className={styles.item} onClick={() => select(1)}><FeatherIcon icon="lock" /> Vault</ul>
+            <ul className={styles.item} onClick={() => select(2)}><FeatherIcon icon="key" /> 2FA</ul>
+            <ul className={styles.item} onClick={() => select(3)}><FeatherIcon icon="user" /> Your account</ul>
+            <ul className={styles.item} onClick={() => select(4)}><FeatherIcon icon="box" /> Admin</ul>
         </nav>
 
         {
@@ -56,46 +40,66 @@ const Navbar = ({ }) => {
                 [
                     <FloatingWindow
                         key={0}
-                        width={600}
-                        height={400}
+                        id={0}
+                        width={750}
+                        height={600}
                         title="Nav"
-                        onClose={(event) => handleClick(event, 0)}
+                        onClose={() => select(0)}
+
+                        focusid={focusid}
+                        setfocusid={setfocusid}
                     >
-                        <p>test</p>
+                        <Navigation Token={Token} />
                     </FloatingWindow>,
                     <FloatingWindow
                         key={1}
-                        width={600}
+                        id={1}
+                        width={400}
                         height={500}
                         title="Vault"
-                        onClose={(event) => handleClick(event, 1)}
+                        onClose={() => select(1)}
+
+                        focusid={focusid}
+                        setfocusid={setfocusid}
                     >
-                        <Vault />
+                        <Vault Token={Token} />
                     </FloatingWindow>,
                     <FloatingWindow
                         key={2}
-                        width={600}
-                        height={600}
-                        title="SSH"
-                        onClose={(event) => handleClick(event, 2)}
+                        id={2}
+                        width={300}
+                        height={450}
+                        title="2FA"
+                        onClose={() => select(2)}
+
+                        focusid={focusid}
+                        setfocusid={setfocusid}
                     >
-                        <TerminalDynamic />
+                        <TotpApp Token={Token} />
                     </FloatingWindow>,
                     <FloatingWindow
                         key={3}
+                        id={3}
                         width={600}
                         height={400}
                         title="Your account"
-                        onClose={(event) => handleClick(event, 3)}
+                        onClose={() => select(3)}
+
+                        focusid={focusid}
+                        setfocusid={setfocusid}
                     >
-                        <p>test</p>
+                        <UserInfos User={User} />
                     </FloatingWindow>,
                     <FloatingWindow
                         key={4}
+                        id={4}
                         width={600}
                         height={400}
                         title="Admin"
-                        onClose={(event) => handleClick(event, 4)}
+                        onClose={() => select(4)}
+
+                        focusid={focusid}
+                        setfocusid={setfocusid}
                     >
                         <p>test</p>
                     </FloatingWindow>

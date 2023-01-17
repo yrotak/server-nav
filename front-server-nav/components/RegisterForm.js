@@ -21,6 +21,8 @@ const RegisterForm = () => {
 
     const [challenge_str, setchallenge_str] = useState("");
 
+    const [error, seterror] = useState("");
+
     const router = useRouter();
 
     useEffect(() => {
@@ -40,6 +42,7 @@ const RegisterForm = () => {
 
     return <form className={styles.form} onSubmit={(e) => {
         e.preventDefault()
+        seterror("")
         axios.post(`${window.location.origin}/api/v1/Users`, {
             regpayload: router.query.p,
             username: username,
@@ -49,6 +52,9 @@ const RegisterForm = () => {
             challenge_str: challenge_str
         }).then(res => {
             window.location.href=window.location.origin
+        }).catch(e => {
+            if(e.response.data)
+                seterror(e.response.data.error)
         })
     }}>
         <h3 className={styles.title}>Creditentials</h3>
@@ -61,7 +67,6 @@ const RegisterForm = () => {
         <hr></hr>
         <h3 className={styles.title}>U2F</h3>
         {Unsupported ? <p>This browser is not compatible with U2F</p> : <button className={styles.button} type='button' onClick={() => {
-            console.log(registerrequest.appId, registerrequest.registerRequests, registerrequest.registeredKeys);
             window.u2f.register(registerrequest.appId, registerrequest.registerRequests, registerrequest.registeredKeys, (resp) => {
                 if(resp.errorCode == 0) {
                     setresponseu2f(resp)
@@ -74,8 +79,8 @@ const RegisterForm = () => {
         <button className={styles.button}>
             Continue
         </button>
-
-        <p className={styles.error}>{"d"}</p>
+        
+        <p className={styles.error}>{error}</p>
     </form>;
 
 };

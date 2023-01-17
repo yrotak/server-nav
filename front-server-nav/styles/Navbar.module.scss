@@ -4,24 +4,39 @@
     top: 0;
     bottom: 0;
     width: 300px;
-    background: #222;
+    background: #1e1e2d;
     display: flex;
     flex-direction: column;
+    align-items: center;
     box-sizing: border-box;
 
-    .time {
-
-        color: #fff;
-        font-size: 22px;
-        text-align: center;
+    .watermark {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 90%;
+        padding: 0 20px;
+        .img {
+            width: 64px;
+        }
+        .title {
+            color: #fff;
+        }
     }
 
     .item {
         color: #fff;
         margin: 0;
         padding: 15px 20px;
-        width: 100%;
+        width: 90%;
         text-align: center;
+        box-sizing: border-box;
+        border-radius: 6.175px;
+        text-align: left;
+
+        display: flex;
+        align-items: center;
+        gap: 15px;
 
         cursor: pointer;
 
@@ -30,7 +45,7 @@
         &:hover {
 
             transition: 0.2s background;
-            background: lighten(#222, 10);
+            background: rgb(0, 158, 247);
         }
     }
 }
