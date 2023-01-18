@@ -11,10 +11,10 @@ mod utils;
 use actix_files::NamedFile;
 use actix_web::{get, post, web, web::Data, App, HttpResponse, HttpServer, Responder};
 use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
+use rand::distributions::{Alphanumeric, DistString};
 use sqlx::postgres::PgPoolOptions;
-use u2f::messages::*;
 use u2f::protocol::*;
-use u2f::register::*;
+use users::models::RegisterTokenData;
 use utils::utils::AppState;
 
 #[get("/")]
@@ -25,6 +25,22 @@ async fn index() -> Result<NamedFile, Error> {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv::dotenv().ok();
+
+    let regpayload = jsonwebtoken::encode(
+        &jsonwebtoken::Header::default(),
+        &RegisterTokenData {
+            regsess: Alphanumeric.sample_string(&mut rand::thread_rng(), 16),
+            exp: chrono::offset::Local::now().timestamp() + (2 * 24 * 60 * 60 * 1000),
+        },
+        &jsonwebtoken::EncodingKey::from_secret(
+            std::env::var("JWT_SECRET")
+                .expect("secret not found")
+                .as_ref(),
+        ),
+    )
+    .unwrap();
+
+    println!("{}", std::env::var("URL").expect("url not found") + "/register?p=" + regpayload.as_str());
 
     let db_url = std::env::var("DATABASE_URL").expect("db not found");
     let pool = PgPoolOptions::new()

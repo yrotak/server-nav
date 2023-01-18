@@ -39,6 +39,13 @@ pub struct SignData {
     pub sign_data: String,
 }
 
+#[derive(Clone, Deserialize)]
+pub struct ChangePasswordData {
+    pub curpass: String,
+    pub newpass: String,
+    pub confirmnewpass: String,
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UserTokenData {
     pub id: i32,

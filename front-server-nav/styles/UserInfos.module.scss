@@ -2,4 +2,59 @@
     .info {
         font-weight: 300;
     }
+
+    .forms {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        gap: 10px;
+
+        .form {
+            .input {
+                display: block;
+                width: 100%;
+                padding: 0.5rem 1rem;
+                font-size: 1.1rem;
+                font-weight: 500;
+                line-height: 1.5;
+                color: rgb(94, 98, 120);
+                background-color: #f9f9f9;
+                background-clip: padding-box;
+                border: 1px solid rgb(225, 227, 234);
+                appearance: none;
+                border-radius: 0.475rem;
+                margin: 5px 0;
+                box-sizing: border-box;
+                transition: border-color 0.15s ease-in-out, background-color 0.15s ease-in-out;
+                &:focus {
+                    background-color: #ffffff;
+                    border-color: #b5b5c3;
+                    outline: 0;
+                }
+            }
+        
+            .button {
+                background: rgb(0, 149, 232);
+                border-radius: 6.175px;
+                border: 0;
+                padding: calc(0.775rem + 1px) calc(1.5rem + 1px);
+                width: 100%;
+                margin-top: 10px;
+                font-size: 16px;
+                cursor: pointer;
+                color: #efefef;
+                transition: 0.2s background;
+        
+                &:hover {
+                    transition: 0.2s background;
+                    background: darken(rgb(0, 149, 232), 5);
+                }
+                &:active {
+                    transition: 0.2s background;
+                    background: darken(rgb(0, 149, 232), 10);
+                }
+            }
+        }
+    }
 }

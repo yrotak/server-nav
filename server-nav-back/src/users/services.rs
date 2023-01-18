@@ -1,5 +1,5 @@
 use crate::{
-    users::models::{RegistrationFromDb, SignData},
+    users::models::{ChangePasswordData, RegistrationFromDb, SignData},
     utils::utils::AppState,
 };
 
@@ -30,8 +30,9 @@ async fn get_entries(state: Data<AppState>, req: HttpRequest) -> impl Responder 
     .await
     {
         Ok(user) => {
-            if(user.rank != "admin") {
-                return HttpResponse::Unauthorized().json(utils::build_error("You need admin rank"));
+            if (user.rank != "admin") {
+                return HttpResponse::Unauthorized()
+                    .json(utils::build_error("You need admin rank"));
             }
             match sqlx::query_as!(User, "SELECT * FROM server_nav.users")
                 .fetch_all(&state.db)
@@ -59,8 +60,9 @@ async fn generate_link(state: Data<AppState>, req: HttpRequest) -> impl Responde
     .await
     {
         Ok(user) => {
-            if(user.rank != "admin") {
-                return HttpResponse::Unauthorized().json(utils::build_error("You need admin rank"));
+            if (user.rank != "admin") {
+                return HttpResponse::Unauthorized()
+                    .json(utils::build_error("You need admin rank"));
             }
             let regpayload = jsonwebtoken::encode(
                 &jsonwebtoken::Header::default(),
@@ -100,9 +102,8 @@ async fn login(state: Data<AppState>, data: Json<LoginData>) -> impl Responder {
                 ));
             }
             if user[0].rank == "unaccepted" {
-                return HttpResponse::NotFound().json(utils::build_error(
-                    "Your account has not been activated",
-                ));
+                return HttpResponse::NotFound()
+                    .json(utils::build_error("Your account has not been activated"));
             }
             let token = jsonwebtoken::encode(
                 &jsonwebtoken::Header::default(),
@@ -200,6 +201,61 @@ async fn totp_confirm(
             }
         }
         Err(e) => HttpResponse::Unauthorized().json(utils::build_error("Invalid token")),
+    }
+}
+
+#[post("/api/v1/Users/changePass")]
+async fn change_pass(
+    state: Data<AppState>,
+    data: Json<ChangePasswordData>,
+    req: HttpRequest,
+) -> impl Responder {
+    match utils::check_token(
+        req.headers()
+            .get("Authorization")
+            .unwrap()
+            .to_str()
+            .unwrap_or("no")
+            .to_string(),
+        state.clone(),
+    )
+    .await
+    {
+        Ok(user) => {
+            if user.password == sha256::digest(String::from(data.curpass.clone())) {
+                if data.newpass == data.confirmnewpass {
+                    match sqlx::query_as!(
+                        User,
+                        "UPDATE server_nav.users SET password = $1 WHERE id = $2 RETURNING id, username, password, totp, date, regsess, u2f_device, rank",
+                        sha256::digest(String::from(data.newpass.clone())),
+                        user.id
+                    )
+                    .fetch_all(&state.db)
+                    .await
+                    {
+                        Ok(user) => {
+                            if user.len() == 0 {
+                                return HttpResponse::Unauthorized()
+                                    .json(utils::build_error("An error has happened"));
+                            }
+        
+                            return HttpResponse::Ok().json(serde_json::json!({ "success": true }));
+                        }
+                        Err(_) => {
+                            return HttpResponse::NotFound()
+                                .json(utils::build_error("Something happened while contacting db"))
+                        }
+                    }
+                } else {
+                    return HttpResponse::BadRequest()
+                        .json(utils::build_error("The two password are not matching"))
+                }
+            } else {
+                return HttpResponse::Unauthorized()
+                        .json(utils::build_error("Current password is not valid"))
+            }
+        }
+        Err(e) => HttpResponse::Unauthorized().json(utils::build_error(&e)),
     }
 }
 #[post("/api/v1/Users/signRequest")]
@@ -450,8 +506,9 @@ async fn delete_entries(
     .await
     {
         Ok(user) => {
-            if(user.rank != "admin") {
-                return HttpResponse::Unauthorized().json(utils::build_error("You need admin rank"));
+            if (user.rank != "admin") {
+                return HttpResponse::Unauthorized()
+                    .json(utils::build_error("You need admin rank"));
             }
             let id = path_id.into_inner();
 
@@ -497,5 +554,6 @@ pub fn config(cfg: &mut ServiceConfig) {
         .service(register_request)
         .service(sign_response)
         .service(sign_request)
-        .service(check_token);
+        .service(check_token)
+        .service(change_pass);
 }

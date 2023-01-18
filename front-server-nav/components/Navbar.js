@@ -88,7 +88,7 @@ const Navbar = ({ User, Token }) => {
                         focusid={focusid}
                         setfocusid={setfocusid}
                     >
-                        <UserInfos User={User} />
+                        <UserInfos User={User} Token={Token} />
                     </FloatingWindow>,
                     <FloatingWindow
                         key={4}
