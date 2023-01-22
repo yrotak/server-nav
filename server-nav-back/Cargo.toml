@@ -28,3 +28,10 @@ sanitize-filename = "0.3"
 [dependencies.totp-rs]
 version = "^3.0"
 features = ["gen_secret"]
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = 'abort'
+strip = true
