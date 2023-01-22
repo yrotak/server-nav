@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 actix-web = { version = "4", features = ["openssl"] }
+actix-multipart = "0.5.0"
 u2f = "0.2.0"
 openssl = { version = "0.10" }
 serde = { version="1.0.147", features = ["derive"] } 
@@ -16,10 +17,13 @@ dotenv = "0.15.0"
 jsonwebtoken = "8"
 sha256 = "1.1.1"
 chrono = "0.4.23"
+uuid = { version = "0.8", features = ["v4"] }
 base32 = "0.4.0"
 hex = "0.4.3"
 actix-files = "0.6.2"
 rand = "0.8.5"
+futures-util = { version = "0.3.7", default-features = false, features = ["std"] }
+sanitize-filename = "0.3"
 
 [dependencies.totp-rs]
 version = "^3.0"

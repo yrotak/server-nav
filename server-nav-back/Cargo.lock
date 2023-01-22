@@ -91,6 +91,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "actix-multipart"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5011f5be460e35a5b82e1745c0ea0c6293e8f8d38bbaa1f0455afcff5b454ad6"
+dependencies = [
+ "actix-utils",
+ "actix-web",
+ "bytes 1.3.0",
+ "derive_more",
+ "futures-core",
+ "httparse",
+ "local-waker",
+ "log",
+ "memchr",
+ "mime",
+]
+
+[[package]]
 name = "actix-router"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1729,6 +1747,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4501abdff3ae82a1c1b477a17252eb69cee9e66eb915c1abaa4f44d873df9f09"
 
 [[package]]
+name = "sanitize-filename"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bf18934a12018228c5b55a6dae9df5d0641e3566b3630cb46cc55564068e7c2f"
+dependencies = [
+ "lazy_static",
+ "regex",
+]
+
+[[package]]
 name = "schannel"
 version = "0.1.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1827,20 +1855,24 @@ name = "server-nav-back"
 version = "0.1.0"
 dependencies = [
  "actix-files",
+ "actix-multipart",
  "actix-web",
  "base32",
  "chrono",
  "dotenv",
+ "futures-util",
  "hex",
  "jsonwebtoken",
  "openssl",
  "rand",
+ "sanitize-filename",
  "serde",
  "serde_json",
  "sha256",
  "sqlx",
  "totp-rs",
  "u2f",
+ "uuid",
 ]
 
 [[package]]
@@ -2329,6 +2361,15 @@ dependencies = [
  "form_urlencoded",
  "idna",
  "percent-encoding",
+]
+
+[[package]]
+name = "uuid"
+version = "0.8.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bc5cf98d8186244414c848017f0e2676b3fcb46807f6668a97dfe67359a3c4b7"
+dependencies = [
+ "getrandom",
 ]
 
 [[package]]

@@ -24,6 +24,11 @@ pub struct CreateEntryData {
     pub u2f_device: String
 }
 #[derive(Clone, Deserialize)]
+pub struct ChangeRankData {
+    pub id: i32,
+    pub rank: String,
+}
+#[derive(Clone, Deserialize)]
 pub struct LoginData {
     pub username: String,
     pub password: String,

@@ -21,6 +21,125 @@
             outline: 0;
         }
     }
+    .file-upload {
+        display: block;
+        text-align: center;
+        font-size: 12px;
+        width: 100%;
+
+        .file-select {
+            display: block;
+            border: 1px solid rgba(170, 170, 170, 0.5);
+            color:rgb(94, 98, 120);
+            cursor: pointer;
+            border-radius: 8px;
+            height: 40px;
+            line-height: 40px;
+            text-align: left;
+            background: #f9f9f9;
+            overflow: hidden;
+            position: relative;
+            .file-select-button {
+                background: #f9f9f9;
+                padding: 0 10px;
+                display: inline-block;
+                height: 40px;
+                line-height: 40px;
+            }
+            .file-select-name {
+                line-height: 40px;
+                display: inline-block;
+                padding: 0 10px;
+            }
+            &:hover {
+                border-color: #ccc;
+                transition: all 0.2s ease-in-out;
+                -moz-transition: all 0.2s ease-in-out;
+                -webkit-transition: all 0.2s ease-in-out;
+                -o-transition: all 0.2s ease-in-out;
+                .file-select-button {
+                    background: #f9f9f9;
+                    color: rgb(94, 98, 120);
+                    transition: all 0.2s ease-in-out;
+                    -moz-transition: all 0.2s ease-in-out;
+                    -webkit-transition: all 0.2s ease-in-out;
+                    -o-transition: all 0.2s ease-in-out;
+                }
+            }
+            &.file-select-disabled {
+                opacity: 0.65;
+                &:hover {
+                    cursor: default;
+                    display: block;
+                    border: 2px solid #dce4ec;
+                    color: rgb(94, 98, 120);
+                    cursor: pointer;
+                    height: 40px;
+                    line-height: 40px;
+                    margin-top: 5px;
+                    text-align: left;
+                    background: #f9f9f9;
+                    overflow: hidden;
+                    position: relative;
+                    .file-select-button {
+                        background: #dce4ec;
+                        color: #666666;
+                        padding: 0 10px;
+                        display: inline-block;
+                        height: 40px;
+                        line-height: 40px;
+                    }
+                    .file-select-name {
+                        line-height: 40px;
+                        display: inline-block;
+                        padding: 0 10px;
+                    }
+                }
+            }
+        }
+        &.active .file-select {
+            border-color: rgb(0, 149, 232);
+            transition: all 0.2s ease-in-out;
+            -moz-transition: all 0.2s ease-in-out;
+            -webkit-transition: all 0.2s ease-in-out;
+            -o-transition: all 0.2s ease-in-out;
+            .file-select-button {
+                background: rgb(0, 149, 232);
+                color: #fff;
+                transition: all 0.2s ease-in-out;
+                -moz-transition: all 0.2s ease-in-out;
+                -webkit-transition: all 0.2s ease-in-out;
+                -o-transition: all 0.2s ease-in-out;
+            }
+        }
+        input[type="file"] {
+            z-index: 100;
+            cursor: pointer;
+            position: absolute;
+            height: 100%;
+            width: 100%;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            filter: alpha(opacity=0);
+        }
+    }
+    .progressbar {
+        width: 100%;
+        height: 10px;
+        margin: 10px 0;
+        border-radius: 4px;
+        background: #ccc;
+        position: relative;
+        overflow: hidden;
+        .percent {
+            height: 100%;
+            background: rgb(0, 149, 232);
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+    }
     .button {
         background: rgb(0, 149, 232);
         border-radius: 6.175px;

@@ -1,5 +1,5 @@
 use crate::{
-    users::models::{ChangePasswordData, RegistrationFromDb, SignData},
+    users::models::{ChangePasswordData, RegistrationFromDb, SignData, ChangeRankData},
     utils::utils::AppState,
 };
 
@@ -527,6 +527,52 @@ async fn delete_entries(
         Err(e) => HttpResponse::Unauthorized().json(utils::build_error(&e)),
     }
 }
+
+#[post("/api/v1/Users/changeRank")]
+async fn change_rank(state: Data<AppState>, req: HttpRequest, data: Json<ChangeRankData>) -> impl Responder {
+    match utils::check_token(
+        req.headers()
+            .get("Authorization")
+            .unwrap()
+            .to_str()
+            .unwrap_or("no")
+            .to_string(),
+        state.clone(),
+    )
+    .await
+    {
+        Ok(user) => {
+            if user.rank == "admin" {
+                match sqlx::query_as!(
+                    User,
+                    "UPDATE server_nav.users SET rank = $1 WHERE id = $2 RETURNING id, username, password, totp, date, regsess, u2f_device, rank",
+                    data.rank,
+                    data.id
+                )
+                .fetch_all(&state.db)
+                .await
+                {
+                    Ok(user) => {
+                        if user.len() == 0 {
+                            return HttpResponse::Unauthorized()
+                                .json(utils::build_error("An error has happened"));
+                        }
+    
+                        return HttpResponse::Ok().json(serde_json::json!({ "success": true }));
+                    }
+                    Err(_) => {
+                        return HttpResponse::NotFound()
+                            .json(utils::build_error("Something happened while contacting db"))
+                    }
+                }
+            } else {
+                return HttpResponse::Unauthorized().json(utils::build_error("You are not admin"));
+            }
+        },
+        Err(e) => HttpResponse::Unauthorized().json(utils::build_error(&e)),
+    }
+}
+
 #[post("/api/v1/Users/checkToken")]
 async fn check_token(state: Data<AppState>, req: HttpRequest) -> impl Responder {
     match utils::check_token(
@@ -555,5 +601,6 @@ pub fn config(cfg: &mut ServiceConfig) {
         .service(sign_response)
         .service(sign_request)
         .service(check_token)
+        .service(change_rank)
         .service(change_pass);
 }

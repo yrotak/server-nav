@@ -1,11 +1,13 @@
 .userinfos {
+    padding: 10px;
+    box-sizing: border-box;
     .info {
         font-weight: 300;
     }
 
     .forms {
         display: flex;
-        justify-content: center;
+        justify-content: flex-start;
         align-items: center;
 
         gap: 10px;

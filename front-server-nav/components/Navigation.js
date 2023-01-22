@@ -36,7 +36,7 @@ const Navigation = ({ Token }) => {
                     Items.map(item => (
                         <div key={item.id} className={styles.element}>
                             <a href={item.url} target="about:blank" className={styles.link}>
-                                <img src={item.image} className={styles.img}></img>
+                                <img src={`/uploads/${item.image}`} className={styles.img}></img>
                                 <p className={styles.name}>{item.name}</p>
                             </a>
                             <button className={styles.delete} onClick={() => {

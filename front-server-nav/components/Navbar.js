@@ -7,23 +7,77 @@ import FeatherIcon from 'feather-icons-react';
 import TotpApp from './TotpApp';
 import UserInfos from './UserInfos';
 import Navigation from './Navigation';
+import Admin from './Admin';
 
 const Navbar = ({ User, Token }) => {
 
     const [selectedIds, setSelectedIds] = useState([]);
-
     const [focusid, setfocusid] = useState(0);
 
+    const [isMobile, setisMobile] = useState(false);
+    const [isOpened, setisOpened] = useState(true);
+
     const select = (index) => {
-        if (selectedIds.includes(index)) {
-            setSelectedIds(selectedIds.filter((i) => i !== index));
+        if (isMobile) {
+            setisOpened(false)
+            setSelectedIds([index])
         } else {
-            setSelectedIds([...selectedIds, index]);
+            if (selectedIds.includes(index)) {
+                setSelectedIds(selectedIds.filter((i) => i !== index));
+            } else {
+                setSelectedIds([...selectedIds, index]);
+            }
         }
     };
 
+    const widgets = [
+        {
+            width: 750,
+            height: 600,
+            id: 0,
+            title: "Navigation",
+            element: <Navigation Token={Token} />,
+        },
+        {
+            width: 400,
+            height: 500,
+            id: 1,
+            title: "Vault",
+            element: <Vault Token={Token} />,
+        },
+        {
+            width: 300,
+            height: 450,
+            id: 2,
+            title: "2FA",
+            element: <TotpApp Token={Token} />,
+        },
+        {
+            width: 600,
+            height: 400,
+            id: 3,
+            title: "Account informations",
+            element: <UserInfos User={User} Token={Token} />,
+        },
+        {
+            width: 600,
+            height: 400,
+            id: 4,
+            title: "Admin",
+            element: <Admin Token={Token} />,
+        },
+
+    ]
+
+    useEffect(() => {
+        let inter = setInterval(() => {
+            setisMobile(window.innerWidth <= 1050)
+        }, 100)
+        return () => clearInterval(inter);
+    }, []);
+
     return <>
-        <nav className={styles.navbar}>
+        <nav className={styles.navbar + (isOpened ? " "+styles.opened : "")}>
             <div className={styles.watermark}>
                 <img src="/logo.png" className={styles.img}></img>
                 <h2 className={styles.title}>Drayneur</h2>
@@ -36,6 +90,31 @@ const Navbar = ({ User, Token }) => {
         </nav>
 
         {
+            isMobile ?
+                (
+                    <div className={styles.mobilecontent}>
+                        <button className={styles.collapse} onClick={() => setisOpened(true)}>
+                            <FeatherIcon icon="menu" />
+                        </button>
+                        {selectedIds.length > 0 && widgets[selectedIds[0]].element}
+                    </div>
+                )
+                : widgets.map(widget => selectedIds.includes(widget.id) && <FloatingWindow
+                    key={widget.id}
+                    id={widget.id}
+                    width={widget.width}
+                    height={widget.height}
+                    title={widget.title}
+                    onClose={() => select(widget.id)}
+
+                    focusid={focusid}
+                    setfocusid={setfocusid}
+                >
+                    {widget.element}
+                </FloatingWindow>)
+        }
+
+        {/* {
             selectedIds.map(id => (
                 [
                     <FloatingWindow
@@ -101,11 +180,11 @@ const Navbar = ({ User, Token }) => {
                         focusid={focusid}
                         setfocusid={setfocusid}
                     >
-                        <p>test</p>
+                        <Admin Token={Token} />
                     </FloatingWindow>
                 ][id]
             ))
-        }
+        } */}
     </>;
 };
 
