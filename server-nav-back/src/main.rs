@@ -129,7 +129,7 @@ async fn main() -> std::io::Result<()> {
             .service(actix_files::Files::new("/uploads", "./uploads").show_files_listing())
             .service(actix_files::Files::new("/", "./static").show_files_listing())
     })
-    .bind_openssl(("127.0.0.1", 8080), builder)?
+    .bind_openssl(("0.0.0.0", 8080), builder)?
     .run()
     .await
 }
