@@ -80,7 +80,7 @@ const Navbar = ({ User, Token }) => {
         <nav className={styles.navbar + (isOpened ? " "+styles.opened : "")}>
             <div className={styles.watermark}>
                 <img src="/logo.png" className={styles.img}></img>
-                <h2 className={styles.title}>Drayneur</h2>
+                <h2 className={styles.title}>Server portal</h2>
             </div>
             <ul className={styles.item} onClick={() => select(0)}><FeatherIcon icon="navigation" /> Nav</ul>
             <ul className={styles.item} onClick={() => select(1)}><FeatherIcon icon="lock" /> Vault</ul>
