@@ -11,6 +11,7 @@ const LoginForm = ({setCurrentChallenge, setToken }) => {
 
     return <form className={styles.form} onSubmit={(e) => {
         e.preventDefault()
+
         seterror("")
         axios.post(`${window.location.origin}/api/v1/Users/login`, {
             username: username,

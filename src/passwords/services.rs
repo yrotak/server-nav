@@ -1,15 +1,15 @@
 use actix_web::{
-    delete, get, post, put,
+    delete, get, post,
     web::{Data, Json, Path, ServiceConfig},
     HttpRequest, HttpResponse, Responder,
 };
 
 use crate::{
-    navigation::models::{CreateEntryData, NavItem},
+    passwords::models::{Password, CreateEntryData},
     utils::utils::{self, AppState},
 };
 
-#[get("/api/v1/Navigation")]
+#[get("/api/v1/Passwords")]
 async fn get_entries(state: Data<AppState>, req: HttpRequest) -> impl Responder {
     match utils::check_token(
         req.headers()
@@ -22,11 +22,11 @@ async fn get_entries(state: Data<AppState>, req: HttpRequest) -> impl Responder 
     )
     .await
     {
-        Ok(user) => match sqlx::query_as!(NavItem, "SELECT * FROM server_nav.nav_items")
+        Ok(user) => match sqlx::query_as!(Password, "SELECT * FROM server_nav.passwords WHERE owner = $1", user.id)
             .fetch_all(&state.db)
             .await
         {
-            Ok(items) => HttpResponse::Ok().json(items),
+            Ok(passwords) => HttpResponse::Ok().json(passwords),
             Err(_) => HttpResponse::NotFound()
                 .json(utils::build_error("Something happened while contacting db")),
         },
@@ -34,7 +34,8 @@ async fn get_entries(state: Data<AppState>, req: HttpRequest) -> impl Responder 
     }
 }
 
-#[post("/api/v1/Navigation")]
+
+#[post("/api/v1/Passwords")]
 async fn post_entries(
     state: Data<AppState>,
     data: Json<CreateEntryData>,
@@ -52,10 +53,10 @@ async fn post_entries(
     .await
     {
         Ok(user) =>
-            match sqlx::query_as!(NavItem, "INSERT INTO server_nav.nav_items (name, url, image) VALUES ($1, $2, $3) RETURNING id, name, url, image",
-                data.name,
-                data.url,
-                data.image
+            match sqlx::query_as!(Password, "INSERT INTO server_nav.passwords (password, owner, name) VALUES ($1, $2, $3) RETURNING id, password, owner, name",
+                data.password,
+                user.id,
+                data.name
             )
             .fetch_all(&state.db)
             .await
@@ -67,7 +68,7 @@ async fn post_entries(
     }
 }
 
-#[delete("/api/v1/Navigation/{id}")]
+#[delete("/api/v1/Passwords/{id}")]
 async fn delete_entries(
     state: Data<AppState>,
     path_id: Path<i32>,
@@ -88,14 +89,15 @@ async fn delete_entries(
             let id = path_id.into_inner();
 
             match sqlx::query_as!(
-                NavItem,
-                "DELETE FROM server_nav.nav_items WHERE id = $1 RETURNING id, name, url, image",
-                id
+                Password,
+                "DELETE FROM server_nav.passwords WHERE id = $1 AND owner = $2 RETURNING id, password, owner, name",
+                id,
+                user.id
             )
             .fetch_all(&state.db)
             .await
             {
-                Ok(item) => HttpResponse::Ok().json(item),
+                Ok(password) => HttpResponse::Ok().json(password),
                 Err(_) => HttpResponse::NotFound()
                     .json(utils::build_error("Something happened while contacting db")),
             }

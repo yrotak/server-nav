@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import styles from '../styles/Home.module.scss'
 import LoginForm from '../components/LoginForm';
 import TotpForm from '../components/TotpForm';
-import U2fForm from '../components/U2fForm';
+import WebauthnForm from '../components/WebauthnForm';
 import { getCookie } from '../utils/cookies';
 import axios from 'axios';
 import { NotificationManager } from 'react-notifications';
@@ -53,7 +53,7 @@ export default function Home() {
                         return [
                             <LoginForm key={0} setCurrentChallenge={setCurrentChallenge} setToken={setToken} />,
                             <TotpForm key={1} setCurrentChallenge={setCurrentChallenge} setToken={setToken} Token={Token} />,
-                            <U2fForm key={2} setLoggedIn={setLoggedIn} setToken={setToken} Token={Token} updateUserData={updateUserData} />
+                            <WebauthnForm key={2} setLoggedIn={setLoggedIn} setToken={setToken} Token={Token} updateUserData={updateUserData} />
                         ][CurrentChallenge]
                     }).call(this) : <>
                         <Navbar User={User} Token={Token} />

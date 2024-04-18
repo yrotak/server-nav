@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
-use sqlx::{Pool, Postgres, FromRow};
-use u2f::protocol::U2f;
+use sqlx::{FromRow};
 
 #[derive(Debug, Clone, Serialize, FromRow)]
 pub struct User {
@@ -10,8 +9,9 @@ pub struct User {
     pub totp: String,
     pub date: i64,
     pub regsess: String,
-    pub u2f_device: String,
-    pub rank: String
+    pub rank: String,
+    pub unique_id: String,
+    pub creditential: String,
 }
 
 #[derive(Clone, Deserialize)]
@@ -20,8 +20,12 @@ pub struct CreateEntryData {
     pub password: String,
     pub totp: String,
     pub regpayload: String,
-    pub challenge_str: String,
-    pub u2f_device: String
+    pub public_key_credential: String,
+    pub unique_id: String,
+}
+#[derive(Clone, Deserialize)]
+pub struct InitRegister {
+    pub username: String,
 }
 #[derive(Clone, Deserialize)]
 pub struct ChangeRankData {
@@ -40,8 +44,7 @@ pub struct TotpData {
 
 #[derive(Clone, Deserialize)]
 pub struct SignData {
-    pub challenge_str: String,
-    pub sign_data: String,
+    pub public_key_credential: String,
 }
 
 #[derive(Clone, Deserialize)]

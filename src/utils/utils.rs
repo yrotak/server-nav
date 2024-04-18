@@ -1,13 +1,15 @@
+use std::sync::Mutex;
+
 use actix_web::web::Data;
 use sqlx::{Pool, Postgres};
-use u2f::protocol::U2f;
+use webauthn_rs::Webauthn;
 
-use crate::users::models::{UserTokenData, User};
-
+use crate::{users::models::{User, UserTokenData}, States};
 
 pub struct AppState {
     pub db: Pool<Postgres>,
-    pub u2f: U2f
+    pub webauthn: Webauthn,
+    pub states: Mutex<States>,
 }
 
 pub async fn check_token(token: String, state: Data<AppState>) -> Result<User, String> {
@@ -46,12 +48,12 @@ pub async fn check_token(token: String, state: Data<AppState>) -> Result<User, S
                 return Err("Wrong auth level".to_owned());
             }
         }
-        Err(e) => Err("Invalid token".to_owned()),
+        Err(_) => Err("Invalid token".to_owned()),
     }
 }
 
 pub fn build_error(err: &str) -> serde_json::Value {
     return serde_json::json!({
         "error": err
-    })
+    });
 }

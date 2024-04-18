@@ -24,7 +24,7 @@ const UserInfos = ({ User, Token }) => {
             </p>
             <p>
                 Security key:{" "}
-                <span className={styles.info}>{JSON.parse(User.u2f_device).deviceName}</span>
+                <span className={styles.info}>{JSON.parse(User.creditential).cred.cred_id}</span>
             </p>
 
             <div className={styles.forms}>
