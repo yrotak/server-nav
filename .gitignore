@@ -8,3 +8,4 @@ front/.next/
 front/package-lock.json
 front/node_modules
 .sqlx/
+.env
